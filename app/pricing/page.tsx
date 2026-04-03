@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AnimateIn from "@/components/AnimateIn";
@@ -10,7 +10,9 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Check, ChevronDown } from "lucide-react";
 
-const PLANS = [
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://mythcipher-automation-backend.onrender.com";
+
+const STATIC_PLANS = [
   {
     name: "Free Trial",
     price: "0",
@@ -24,8 +26,8 @@ const PLANS = [
     cta: "Start Free Trial \u2192",
     campaign: "free_trial",
     featured: false,
-    badge: null,
-    note: null,
+    badge: null as string | null,
+    note: null as string | null,
   },
   {
     name: "Monthly",
@@ -34,7 +36,7 @@ const PLANS = [
     features: [
       "Unlimited automations",
       "LinkedIn, YouTube, Email, Instagram",
-      "Pre-built systems (not “templates”)",  
+      "Pre-built systems",
       "Customer support",
       "Tool Hub access",
     ],
@@ -59,14 +61,14 @@ const PLANS = [
     campaign: "yearly_plan",
     featured: false,
     badge: "Best Value",
-    note: "That's just ₹999/month",
+    note: "That's just \u20B9999/month",
   },
 ];
 
 const FAQS = [
   {
     q: "What can I automate with MythCipher?",
-    a: "LinkedIn posting, YouTube scheduling, email campaigns, AI content generation, and more. Instagram automation is coming soon. We\u2019re adding new templates every week.",
+    a: "LinkedIn posting, YouTube scheduling, email campaigns, AI content generation, and more. Instagram automation is coming soon. We're adding new templates every week.",
   },
   {
     q: "How does the free trial work?",
@@ -92,6 +94,30 @@ const FAQS = [
 
 export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [plans, setPlans] = useState(STATIC_PLANS);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/plans`)
+      .then((res) => res.json())
+      .then((data: any[]) => {
+        if (data.length > 0) {
+          setPlans(
+            data.map((p: any) => ({
+              name: p.name,
+              price: p.priceMonthly.toLocaleString("en-IN"),
+              period: p.priceMonthly === 0 ? `for ${p.trialDays} days` : "/month",
+              features: p.features,
+              cta: p.cta,
+              campaign: p.campaign,
+              featured: p.featured,
+              badge: p.badge,
+              note: p.risk,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="bg-Background font-sans overflow-x-hidden min-h-screen">
@@ -112,7 +138,7 @@ export default function PricingPage() {
 
             {/* Cards */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-              {PLANS.map((plan, i) => (
+              {plans.map((plan, i) => (
                 <AnimateIn key={plan.name} delay={0.1 + i * 0.1}>
                   <div className={cn(
                     "rounded-2xl p-5 sm:p-6 space-y-5 relative h-full flex flex-col",
@@ -143,7 +169,7 @@ export default function PricingPage() {
                         </li>
                       ))}
                     </ul>
-                    <Link href={`https://ai.mythcipher.in?utm_source=landing&utm_medium=pricing&utm_campaign=${plan.campaign}`} className="block">
+                    <Link href={`https://ai.mythcipher.in/signup?utm_source=landing&utm_medium=pricing&utm_campaign=${plan.campaign}`} className="block">
                       <Button
                         variant={plan.featured ? "primary" : "secondary"}
                         className="w-full"

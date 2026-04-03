@@ -1,44 +1,40 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AnimateIn from "@/components/AnimateIn";
 import { blogPosts as staticBlogPosts } from "@/lib/blog-data";
-import type { Metadata } from "next";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://mythcipher-automation-backend.onrender.com";
 
-export const metadata: Metadata = {
-  title: "Blog  MythCipher | Automation Tips, Tutorials & Insights",
-  description:
-    "Learn how to automate your business with MythCipher. Tutorials, comparisons, case studies, and tips for freelancers and agencies in India.",
-};
+export default function BlogPage() {
+  const [blogs, setBlogs] = useState<any[]>(staticBlogPosts);
 
-async function getBlogs() {
-  try {
-    const res = await fetch(`${API_BASE}/api/blogs`, { next: { revalidate: 60 } });
-    if (!res.ok) throw new Error("Failed to fetch");
-    const data = await res.json();
-    if (data.length > 0) return data;
-  } catch {
-    // fallback to static
-  }
-  return staticBlogPosts;
-}
+  useEffect(() => {
+    fetch(`${API_BASE}/api/blogs`)
+      .then((res) => res.json())
+      .then((data: any[]) => {
+        if (data.length > 0) setBlogs(data);
+      })
+      .catch(() => {});
+  }, []);
 
-export default async function BlogPage() {
-  const blogs = await getBlogs();
   const featured = blogs[0];
   const rest = blogs.slice(1);
 
-  const getImage = (img: string) => {
-    if (!img) return "/images/feature1.png";
-    return img;
-  };
+  const getImage = (img: string) => img || "/images/feature1.png";
 
   const getDate = (blog: any) => {
     if (blog.date) return blog.date;
-    if (blog.createdAt) return new Date(blog.createdAt).toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" });
+    if (blog.createdAt)
+      return new Date(blog.createdAt).toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
     return "";
   };
 
@@ -50,19 +46,25 @@ export default async function BlogPage() {
           <div className="max-w-6xl mx-auto space-y-12 sm:space-y-16">
             {/* Header */}
             <AnimateIn className="text-center space-y-3 max-w-2xl mx-auto">
-              <p className="text-sm font-medium text-Accent-Cyan tracking-wide">Blog</p>
+              <p className="text-sm font-medium text-Accent-Cyan tracking-wide">
+                Blog
+              </p>
               <h1 className="font-serif text-3xl sm:text-4xl md:text-6xl text-Surface-Hover tracking-tight">
                 Learn. Automate. Ship.
               </h1>
               <p className="text-Tertiary text-sm sm:text-base">
-                Tutorials, comparisons, and real stories from people who finally made automation work.
+                Tutorials, comparisons, and real stories from people who finally
+                made automation work.
               </p>
             </AnimateIn>
 
             {/* Featured post */}
             {featured && (
               <AnimateIn delay={0.1}>
-                <Link href={`/blog/${featured.slug}`} className="block group">
+                <Link
+                  href={`/blog/${featured.slug}`}
+                  className="block group"
+                >
                   <div className="grid md:grid-cols-2 gap-5 sm:gap-6 bg-Card border border-Bento-Border rounded-2xl overflow-hidden">
                     <div className="relative aspect-video md:aspect-auto md:min-h-[320px] overflow-hidden">
                       <Image
@@ -99,7 +101,10 @@ export default async function BlogPage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
               {rest.map((post: any, i: number) => (
                 <AnimateIn key={post.slug} delay={0.05 + i * 0.06}>
-                  <Link href={`/blog/${post.slug}`} className="block group h-full">
+                  <Link
+                    href={`/blog/${post.slug}`}
+                    className="block group h-full"
+                  >
                     <article className="bg-Card border border-Bento-Border rounded-2xl overflow-hidden group-hover:border-Accent-Cyan/30 transition-all duration-300 h-full flex flex-col">
                       <div className="relative aspect-video overflow-hidden">
                         <Image
